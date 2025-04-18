@@ -4,18 +4,51 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <title>RunnerGame | Unity WebGL Player</title>
+  <title>Endless Runner | Unity WebGL Game</title>
+  <meta name="description" content="An exciting endless runner game built with Unity WebGL technology">
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="shortcut icon" href="TemplateData/favicon.ico" type="image/x-icon" />
 
   <style>
+    :root {
+      --primary-color: #6e45e2;
+      --secondary-color: #88d3ce;
+      --dark-bg: #121212;
+      --darker-bg: #0a0a0a;
+      --accent-color: #ff6b6b;
+    }
+
     body {
       margin: 0;
-      background: #1c1c1c;
+      background: linear-gradient(135deg, var(--darker-bg), var(--dark-bg));
       color: #fff;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Montserrat', sans-serif;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .game-title {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 1.8rem;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 10px rgba(110, 69, 226, 0.3);
+      margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .game-title {
+        font-size: 1.4rem;
+      }
     }
 
     #unity-container {
@@ -26,9 +59,15 @@
 
     #unity-canvas {
       background: #000;
-      border-radius: 10px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       max-width: 100%;
       height: auto;
+      transition: transform 0.3s ease;
+    }
+
+    #unity-canvas:hover {
+      transform: scale(1.01);
     }
 
     #unity-fullscreen-button {
@@ -36,46 +75,87 @@
       bottom: 20px;
       right: 20px;
       z-index: 10;
-      background-color: #0d6efd;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
       color: white;
       border: none;
       border-radius: 50%;
-      width: 48px;
-      height: 48px;
+      width: 50px;
+      height: 50px;
       font-size: 1.25rem;
       cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #unity-fullscreen-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
     }
 
     #unity-warning div {
       margin: 10px auto;
-      padding: 10px;
-      border-radius: 4px;
+      padding: 12px;
+      border-radius: 6px;
       font-size: 14px;
       max-width: 90%;
+      background-color: rgba(255, 107, 107, 0.9);
+      color: white;
     }
 
     #unity-loading-bar {
-      margin: 1rem auto;
+      margin: 1.5rem auto;
       width: 80%;
+      height: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    #unity-progress-bar-full {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+      transition: width 0.3s ease;
+    }
+
+    .loading-text {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
     }
 
     footer {
-      background-color: #111;
-      padding: 1rem 0;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 1.5rem 0;
       text-align: center;
       color: #aaa;
-      position: absolute;
-      bottom: 0px;
       width: 100%;
+      backdrop-filter: blur(5px);
+      position: absolute;
+      bottom: 0;
     }
 
     footer a {
-      color: #0dcaf0;
+      color: var(--secondary-color);
       text-decoration: none;
+      transition: color 0.3s ease;
     }
 
     footer a:hover {
-      text-decoration: underline;
+      color: var(--accent-color);
+      text-decoration: none;
+    }
+
+    .social-icon {
+      font-size: 1.2rem;
+      margin: 0 8px;
+      transition: transform 0.3s ease;
+    }
+
+    .social-icon:hover {
+      transform: translateY(-3px);
     }
 
     canvas.unity-mobile {
@@ -85,48 +165,178 @@
       object-fit: contain;
       touch-action: none;
     }
+
+    .game-controls {
+      display: none;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .control-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .control-key {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      padding: 5px 10px;
+      margin-right: 10px;
+      font-family: monospace;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(110, 69, 226, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(110, 69, 226, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(110, 69, 226, 0);
+      }
+    }
+
+    .game-stats {
+      display: none;
+      justify-content: space-around;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 10px 15px;
+      margin: 5px;
+      min-width: 120px;
+    }
+
+    .stat-value {
+      font-weight: bold;
+      color: var(--secondary-color);
+      font-size: 1.2rem;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- Developer Info Section -->
-  <section class="bg-dark text-white py-4 border-bottom border-secondary">
+  <!-- Header Section -->
+  <header class="py-3 border-bottom border-secondary" style="background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px);">
     <div class="container">
       <div class="row align-items-center">
         <div class="col-md-8">
-          <h1 class="h4 mb-1">Endless Runner Game Demo</h1>
-          <p class="mb-1">Version 0.1 | Developed with Unity WebGL</p>
-          <p class="mb-0">February 2024</p>
+          <h1 class="game-title">ENDLESS RUNNER</h1>
+          <p class="mb-1">Version 0.1 | Built with Unity WebGL</p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
-          <a href="https://ketandutt.github.io/" target="_blank" class="btn btn-outline-info">🌐 Portfolio</a>
-          <a href="https://github.com/KetanDutt/RunnerGame" target="_blank" class="btn btn-outline-light  ms-2">🔗 Source</a>
+          <a href="https://ketandutt.github.io/" target="_blank" class="btn btn-outline-info me-2">
+            <i class="fas fa-globe me-1"></i> Portfolio
+          </a>
+          <a href="https://github.com/KetanDutt/RunnerGame" target="_blank" class="btn btn-outline-light">
+            <i class="fab fa-github me-1"></i> Source
+          </a>
         </div>
       </div>
     </div>
-  </section>
+  </header>
 
   <!-- Unity Container -->
   <main id="unity-container" class="py-4">
     <div class="container">
-      <canvas id="unity-canvas" width="960" height="600" tabindex="-1" aria-label="Game Canvas"></canvas>
+      <div class="row justify-content-center">
+        <div class="col-lg-10">
+          <canvas id="unity-canvas" width="960" height="600" tabindex="-1" aria-label="Game Canvas"></canvas>
 
-      <div id="unity-loading-bar" class="progress mt-3">
-        <div id="unity-progress-bar-full" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+          <div id="unity-loading-bar" class="mt-4">
+            <div id="unity-progress-bar-full" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+            <div class="loading-text text-center">Loading game assets...</div>
+          </div>
+
+          <div id="unity-warning" role="alert"></div>
+          
+          <!-- Game Controls Info -->
+          <div class="game-controls mt-4">
+            <h5 class="text-center mb-3"><i class="fas fa-gamepad me-2"></i>Game Controls</h5>
+            <div class="control-item">
+              <span class="control-key">↑</span>
+              <span>Jump</span>
+            </div>
+            <div class="control-item">
+              <span class="control-key">↓</span>
+              <span>Slide</span>
+            </div>
+            <div class="control-item">
+              <span class="control-key">←</span>
+              <span>Left</span>
+            </div>
+            <div class="control-item">
+              <span class="control-key">→</span>
+              <span>Right</span>
+            </div>
+          </div>
+          
+          <!-- Game Stats Placeholder -->
+          <div class="game-stats">
+            <div class="stat-item">
+              <div class="stat-value">0</div>
+              <div class="stat-label">HIGH SCORE</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">0</div>
+              <div class="stat-label">CURRENT SCORE</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">0</div>
+              <div class="stat-label">COINS COLLECTED</div>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <div id="unity-warning" role="alert"></div>
-      <button id="unity-fullscreen-button" title="Fullscreen" aria-label="Go Fullscreen">⛶</button>
+      <button id="unity-fullscreen-button" title="Fullscreen" aria-label="Go Fullscreen" class="pulse">
+        <i class="fas fa-expand"></i>
+      </button>
     </div>
   </main>
 
   <!-- Footer -->
   <footer>
-    Made with ❤️ by <strong>Ketan Dutt</strong>. Connect on
-    <a href="https://github.com/KetanDutt" target="_blank">GitHub</a> |
-    <a href="mailto:ketan6196@gmail.com"> Gmail</a> |
-    <a href="https://www.linkedin.com/in/ketan-dutt-006104b7/" target="_blank">LinkedIn</a>
+    <div class="container">
+      <div class="mb-3">
+        <a href="https://github.com/KetanDutt" target="_blank" class="social-icon" aria-label="GitHub">
+          <i class="fab fa-github"></i>
+        </a>
+        <a href="mailto:ketan6196@gmail.com" class="social-icon" aria-label="Email">
+          <i class="fas fa-envelope"></i>
+        </a>
+        <a href="https://www.linkedin.com/in/ketan-dutt-006104b7/" target="_blank" class="social-icon" aria-label="LinkedIn">
+          <i class="fab fa-linkedin"></i>
+        </a>
+        <a href="https://www.instagram.com/k10.dutt/" target="_blank" class="social-icon" aria-label="Instagram">
+          <i class="fab fa-instagram"></i>
+        </a>
+      </div>
+      <p class="mb-0">Made with <i class="fas fa-heart text-danger"></i> by <strong>Ketan Dutt</strong></p>
+      <p class="small mt-1 mb-0">© 2024 All Rights Reserved</p>
+    </div>
   </footer>
 
   <!-- Unity Loader Script -->
@@ -137,12 +347,32 @@
     const progressBarFull = document.getElementById("unity-progress-bar-full");
     const fullscreenButton = document.getElementById("unity-fullscreen-button");
     const warningBanner = document.getElementById("unity-warning");
+    const loadingText = document.querySelector(".loading-text");
+
+    const loadingPhrases = [
+      "Loading game assets...",
+      "Preparing the adventure...",
+      "Almost there...",
+      "Getting everything ready..."
+    ];
+
+    function updateLoadingText(progress) {
+      if (progress < 0.25) {
+        loadingText.textContent = loadingPhrases[0];
+      } else if (progress < 0.5) {
+        loadingText.textContent = loadingPhrases[1];
+      } else if (progress < 0.75) {
+        loadingText.textContent = loadingPhrases[2];
+      } else {
+        loadingText.textContent = loadingPhrases[3];
+      }
+    }
 
     function unityShowBanner(msg, type) {
       const div = document.createElement('div');
-      div.textContent = msg;
-      div.style.background = type === 'error' ? 'red' : 'yellow';
-      div.style.color = '#000';
+      div.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${msg}`;
+      div.style.background = type === 'error' ? 'rgba(255, 0, 0, 0.8)' : 'rgba(255, 193, 7, 0.9)';
+      div.style.color = type === 'error' ? 'white' : '#000';
       warningBanner.appendChild(div);
       warningBanner.style.display = 'block';
 
@@ -191,17 +421,31 @@
     script.onload = () => {
       createUnityInstance(canvas, config, (progress) => {
         progressBarFull.style.width = `${progress * 100}%`;
+        updateLoadingText(progress);
       }).then((unityInstance) => {
         loadingBar.style.display = "none";
+        loadingText.textContent = "Ready to play!";
+        
         fullscreenButton.onclick = () => {
           unityInstance.SetFullscreen(1);
         };
+        
+        // You can add game event listeners here to update the stats
+        // Example:
+        // unityInstance.SendMessage('GameManager', 'SetScoreCallback', 'updateScore');
       }).catch((message) => {
         unityShowBanner(`⚠️ ${message}`, 'error');
       });
     };
 
     document.body.appendChild(script);
+    
+    // Function to update game stats (would be called from Unity)
+    window.updateScore = function(highScore, currentScore, coins) {
+      document.querySelectorAll('.stat-item .stat-value')[0].textContent = highScore;
+      document.querySelectorAll('.stat-item .stat-value')[1].textContent = currentScore;
+      document.querySelectorAll('.stat-item .stat-value')[2].textContent = coins;
+    };
   </script>
 
 </body>
